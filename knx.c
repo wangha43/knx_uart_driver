@@ -66,15 +66,15 @@ void setCommand(enum KnxCommandType command) {
 
 void setPayloadLength(int payloadlength) {
   knxFrame->knxFrameBuffer[5] &= B11110000;
-  knxFrame->knxFrameBuffer[5] |= (payloadlength -1);
+  knxFrame->knxFrameBuffer[5] |= (payloadlength);
 
-  knxFrame->frameLength = payloadlength + HANDER_FARME_LENGTH;
+  knxFrame->frameLength = payloadlength + HANDER_FARME_LENGTH + 1;
 }
 
 void setChecksum() {
   int bcc = 0x00;
   int i;
-//xor and then ~
+
   for(i=0;i<knxFrame->frameLength;i++) {
     bcc ^= knxFrame->knxFrameBuffer[i];
   }
@@ -165,21 +165,34 @@ int groupWriteByte(int fd,int mainGroup, int middleGroup, int subGroup, int valu
 
 }
 
-int groupReadBoolReq(int fd, int mainGroup, int middleGroup, int subGroup, int value)
-{
-	int valueBool=0;
-	int i;
+// int groupReadBoolReq(int fd, int mainGroup, int middleGroup, int subGroup, int value)
+// {
+	// int valueBool=0;
+	// int i;
 
-	initKnxFrame(fd);
+	// initKnxFrame(fd);
 
-	createKNXMessageFrame(2,KNX_COMMAND_READ,mainGroup,middleGroup,subGroup,valueBool);
+	// createKNXMessageFrame(2,KNX_COMMAND_READ,mainGroup,middleGroup,subGroup,valueBool);
 	/***
 	for(i=0;i<knxFrame->frameLength;i++) {
 		printf("%02x\n", knxFrame->knxFrameBuffer[i]);
 	
     }**/
 
-	return uartSendFrame(fd);
+// 	return uartSendFrame(fd);
+// }
+
+int groupReadBoolReq(int fd, int mainGroup, int middleGroup, int subGroup){
+  initKnxFrame(fd);
+  clean();
+
+  setSourceAddress(1,1,2);
+  setTargetGroupAddress(mainGroup,middleGroup,subGroup);
+  setFirsetDataByte(0);
+  setCommand(KNX_COMMAND_READ);
+  setPayloadLength(1);
+  setChecksum();
+  return uartSendFrame(fd);
 }
 
 int groupReadByte(int fd, int mainGroup, int middleGroup, int subGroup)
@@ -197,6 +210,18 @@ int groupReadByte(int fd, int mainGroup, int middleGroup, int subGroup)
 	
 	return uartSendFrame(fd);
 
+}
+
+int groupReadBytes(int fd, int mainGroup, int middleGroup, int subGroup,int bytelength){
+  initKnxFrame(fd);
+  clean();
+  setSourceAddress(1,1,2);
+  setTargetGroupAddress(mainGroup,middleGroup,subGroup);
+  setFirsetDataByte(0);
+  setCommand(KNX_COMMAND_READ);
+  setPayloadLength(bytelength);
+  setChecksum();
+  return uartSendFrame(fd);
 }
 
 int UART_Send(int fd,char *buffer, int length)

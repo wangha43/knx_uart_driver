@@ -13,7 +13,9 @@
 #include <getopt.h>
 #include <time.h>
 #include "knx.h"
+#include "knx_transfer.h"
 #include <linux/serial.h>
+#include <stdint.h>
 
 #define BAUDRATE B19200
 #define MODEMDEVICE "/dev/ttyUSB0"
@@ -57,11 +59,15 @@ void dump_data(unsigned char * b, int count) {
 void rx_data_handler(unsigned char * b, int count)
 {
     int i;
+    printf("------------------------------------\n");
     for(i=0;i<count;i++) {
         rx_buf[rx_w_index] = b[i];
         rx_w_index++;
         if(rx_w_index>=MAX_RX_SIZE) rx_w_index -= MAX_RX_SIZE;
+       
+        printf("read %d :%02x \n", i,b[i]);
     }
+    printf("------------------------------------\n");
 	
 	process_rx_data();
 }
@@ -97,7 +103,7 @@ void process_rx_data(void)
 		
 		if(rx_frame.length==1)
 		{
-			rx_frame.value = rx_buf[i+7] & 0x0F;
+			rx_frame.value = rx_buf[i+7] & 0x3F;
 			dump_rx_buf(9);	
 		}
 		
@@ -107,6 +113,15 @@ void process_rx_data(void)
 			dump_rx_buf(10);	
 		}
 
+		if (rx_frame.length ==3)
+		{
+			rx_frame.value = uint16_t(rx_buf[i+8]) <<8|rx_buf[i+9];
+			dump_rx_buf(11);
+			uint16_t uval = rx_frame.value;
+			float fval;
+			if(DP9_xxx_to_Float(uval,&fval))
+				printf("%f\n", fval);
+		}
 		printf("The value of %02x is %d\n",rx_frame.sourceaddress,rx_frame.value);
 		
 		rx_r_index  =rx_r_index + (8 + rx_frame.length);
@@ -226,7 +241,7 @@ int main(void)
 	clock_gettime(CLOCK_MONOTONIC, &last_stat);
 	
 	// groupWriteByte(_fd,0,1,1,0);
-	groupWriteBool(_fd,1,1,1,1);
+	// groupWriteBool(_fd,1,1,1,1);
 	while (1) {
 
 //		groupWriteByte(_fd,0,1,1,valuebyte);
@@ -234,15 +249,14 @@ int main(void)
 		sleep(2);
 		
 		
-		groupReadByte(_fd,2,1,1);
-		
-		usleep(50000);
-		
+		// groupReadBoolReq(_fd,2,1,1);
+		//though it is 
+		groupReadBytes(_fd,1,7,4,3);
 		int c = read(_fd, &rb, 1024);
+		usleep(100000);
 
 		if(c>8) printf("knx write success\n");
 
-		usleep(50000);
 		c = read(_fd, &rb, 1024);
 		if(c>0) rx_data_handler(rb,c);
 		
@@ -281,7 +295,7 @@ int main(void)
 //		groupWriteByte(_fd,0,1,1,0x10);
 		
 
-		sleep(3);
+		sleep(10);
 
 /**
 		if(c>0) dump_data(rb, c);
@@ -300,20 +314,20 @@ int main(void)
 		} else {
 			printf("No data within ten seconds.\n");
 		}
-***/
-		if (_cl_stats) {
-			struct timespec current;
-			clock_gettime(CLOCK_MONOTONIC, &current);
-			if (current.tv_sec - last_stat.tv_sec > 5) {
-				dump_serial_port_stats();
-				last_stat = current;
-//				groupWriteBool(_fd,0,1,3,0);
-				groupWriteByte(_fd,1,1,1,valuebyte);
-				valuebyte += 0x10;
+// ***/
+// 		if (_cl_stats) {
+// 			struct timespec current;
+// 			clock_gettime(CLOCK_MONOTONIC, &current);
+// 			if (current.tv_sec - last_stat.tv_sec > 5) {
+// 				dump_serial_port_stats();
+// 				last_stat = current;
+// //				groupWriteBool(_fd,0,1,3,0);
+// 				groupWriteByte(_fd,1,1,1,valuebyte);
+// 				valuebyte += 0x10;
 				
-				//groupReadBoolReq(_fd,2,1,227,0);
-			}
-		}
+// 				//groupReadBoolReq(_fd,2,1,227,0);
+// 			}
+// 		}
 
 	}
 //	free(MODEMDEVICE);

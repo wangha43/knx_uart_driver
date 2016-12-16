@@ -64,14 +64,15 @@ int UART_Send(int fd,char *buffer, int length);
 
 int groupWriteBool(int fd,int mainGroup, int middleGroup, int subGroup, int value);
 
-int groupReadBoolReq(int fd, int mainGroup, int middleGroup, int subGroup, int value);
-
+// int groupReadBoolReq(int fd, int mainGroup, int middleGroup, int subGroup, int value);
+int groupReadBoolReq(int fd, int mainGroup, int middleGroup, int subGroup);
 int uartSendFrame(int fd);
 
 int groupWriteByte(int fd,int mainGroup, int middleGroup, int subGroup, int value);
 
 int groupReadByte(int fd, int mainGroup, int middleGroup, int subGroup);
 
+int groupReadBytes(int fd, int mainGroup, int middleGroup, int subGroup,int bytelength);
 
 #endif
 
