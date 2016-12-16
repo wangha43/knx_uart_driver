@@ -16,7 +16,7 @@
 #include <linux/serial.h>
 
 #define BAUDRATE B19200
-#define MODEMDEVICE "/dev/ttymxc4"
+#define MODEMDEVICE "/dev/ttyUSB0"
 #define MAX_RX_SIZE 1024
 
 unsigned char _write_count_value = 0;
@@ -43,7 +43,7 @@ int rx_r_index = 0;
 
 void process_rx_data(void);
 
-
+//show the command
 void dump_data(unsigned char * b, int count) {
 	printf("%i bytes: ", count);
 	int i;
@@ -53,7 +53,7 @@ void dump_data(unsigned char * b, int count) {
 
 	printf("\n");
 }
-
+//
 void rx_data_handler(unsigned char * b, int count)
 {
     int i;
@@ -65,6 +65,7 @@ void rx_data_handler(unsigned char * b, int count)
 	
 	process_rx_data();
 }
+
 
 void dump_rx_buf(int len)
 {
@@ -146,7 +147,7 @@ void setup_serial_port(void)
 
 	if (_fd < 0) {
 		printf("Error opening serial port \n");
-		free(MODEMDEVICE);
+	//	free(MODEMDEVICE);
 		exit(-1);
 	}
 
@@ -224,8 +225,8 @@ int main(void)
 
 	clock_gettime(CLOCK_MONOTONIC, &last_stat);
 	
-	groupWriteByte(_fd,0,1,1,0);
-
+	// groupWriteByte(_fd,0,1,1,0);
+	groupWriteBool(_fd,1,1,1,1);
 	while (1) {
 
 //		groupWriteByte(_fd,0,1,1,valuebyte);
@@ -233,7 +234,7 @@ int main(void)
 		sleep(2);
 		
 		
-		groupReadByte(_fd,0,1,1);
+		groupReadByte(_fd,2,1,1);
 		
 		usleep(50000);
 		
@@ -307,7 +308,7 @@ int main(void)
 				dump_serial_port_stats();
 				last_stat = current;
 //				groupWriteBool(_fd,0,1,3,0);
-				groupWriteByte(_fd,0,1,1,valuebyte);
+				groupWriteByte(_fd,1,1,1,valuebyte);
 				valuebyte += 0x10;
 				
 				//groupReadBoolReq(_fd,2,1,227,0);
@@ -315,7 +316,7 @@ int main(void)
 		}
 
 	}
-	free(MODEMDEVICE);
+//	free(MODEMDEVICE);
 }
 
 

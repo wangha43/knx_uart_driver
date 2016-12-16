@@ -15,10 +15,10 @@ void clean()
 
   }
   //Control feild
-  knxFrame->knxFrameBuffer[0]= B10111100;
+  knxFrame->knxFrameBuffer[0]= B10111100;//BC
 
   // Target group address, Router counter =6, length =1 (= 2 data bytes)
-  knxFrame->knxFrameBuffer[5]= B11100001;
+  knxFrame->knxFrameBuffer[5]= B11100001;//E1
 
 }
 
@@ -41,7 +41,7 @@ void setSourceAddress(int area, int line, int mumber) {
 void setTargetGroupAddress(int main, int middle, int sub) {
     knxFrame->knxFrameBuffer[3] = (uint8_t)((main << 3) | middle);
     knxFrame->knxFrameBuffer[4] = (uint8_t)sub;
-    knxFrame->knxFrameBuffer[5]|= B10000000;
+    knxFrame->knxFrameBuffer[5]|= B10000000;//not change
 }
 
 void setFirsetDataByte(int data) {
@@ -53,9 +53,9 @@ void setSecondDataByte(uint8_t data)
 {
 	knxFrame->knxFrameBuffer[7] &= B11000000;
 	knxFrame->knxFrameBuffer[8] = data;
-	
 }
 
+//determine read or write 0x00 0x02 
 void setCommand(enum KnxCommandType command) {
   knxFrame->knxFrameBuffer[6] &= B11111100;
   knxFrame->knxFrameBuffer[7] &= B00111111;
@@ -74,7 +74,7 @@ void setPayloadLength(int payloadlength) {
 void setChecksum() {
   int bcc = 0x00;
   int i;
-
+//xor and then ~
   for(i=0;i<knxFrame->frameLength;i++) {
     bcc ^= knxFrame->knxFrameBuffer[i];
   }
@@ -96,6 +96,7 @@ void createKNXMessageFrame(int payloadlength, enum KnxCommandType command, int m
   setChecksum();
 }
 
+//write to com
 int uartSendFrame(int fd) {
   uint8_t sendbuf[2];
   uint8_t i=0;
@@ -203,6 +204,4 @@ int UART_Send(int fd,char *buffer, int length)
     write(fd,buffer,length);
 
     return (TRUE);
-
-
 }
